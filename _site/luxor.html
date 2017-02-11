@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Luxor</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Backtesting Strategies with R</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/timtrice/backtesting-strategies">
+    <span class="fa fa-github text-muted"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Luxor</h1>
+<h3 class="subtitle"><em>A demonstration of the Luxor strategy in R.</em></h3>
+<h4 class="date"><em>11 February, 2017</em></h4>
+
+</div>
+
+
+<pre class="r"><code>library(purrr)          # For plotting multiple charts at once
+library(quantmod)
+library(quantstrat)</code></pre>
+<pre class="r"><code>source(&quot;./_R/functions.R&quot;)   # for checkBlotterUpdate()</code></pre>
+<ul>
+<li>If SMA(10) x&gt; SMA(30)
+<ul>
+<li>BTC short, BTO long</li>
+</ul></li>
+<li>If SMA(10) x&lt; SMA(30)
+<ul>
+<li>STC Long, STO short</li>
+</ul></li>
+</ul>
+<div id="variables" class="section level2">
+<h2>Variables</h2>
+<pre class="r"><code>symbols            &lt;-        c(&quot;SPY&quot;, &quot;QQQ&quot;, &quot;IWM&quot;)  #&#39; As many as you want.
+nFast              &lt;-        10                      #&#39; SMA(10)
+nFast_col          &lt;-        4                       #&#39; Blue
+nSlow              &lt;-        30                      #&#39; SMA(30)
+nSlow_col          &lt;-        2                       #&#39; Red
+transaction_fees   &lt;-        10                      #&#39; Cost of trade, abs value
+source             &lt;-        &quot;yahoo&quot;                 #&#39; Yahoo, Google, FRED, etc.
+init_date          &lt;-        &quot;2007-12-31&quot;            #&#39; start_date - 1 day
+start_date         &lt;-        &quot;2008-01-01&quot;            #&#39; Begin trading
+end_date           &lt;-        &quot;2009-12-31&quot;            #&#39; End trading
+init_equity        &lt;-        10000                   #&#39; Initial equity
+portfolio.st       &lt;-        &quot;Luxor&quot;                 #&#39; Name of portfolio
+account.st         &lt;-        &quot;Luxor&quot;                 #&#39; Name of account
+strategy.st        &lt;-        &quot;Luxor&quot;                 #&#39; Name of strategy
+tz                 &lt;-        &quot;UTC&quot;                   #&#39; Time zone
+#&#39; Currency abbr (ISO 4217); set for currency of symbols.
+curr               &lt;-        &quot;USD&quot;</code></pre>
+</div>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="r"><code>Sys.setenv(TZ = tz)</code></pre>
+<pre class="r"><code>currency(curr)</code></pre>
+<pre><code>## [1] &quot;USD&quot;</code></pre>
+<pre class="r"><code>getSymbols(Symbols           =         symbols, 
+           src               =         source, 
+           from              =         start_date, 
+           to                =         end_date, 
+           # Adjust OHLC values for Adjustment
+           adjust            =         TRUE)</code></pre>
+<pre><code>## [1] &quot;SPY&quot; &quot;QQQ&quot; &quot;IWM&quot;</code></pre>
+<pre class="r"><code>stock(symbols, 
+      currency               =         curr)</code></pre>
+<pre><code>## [1] &quot;SPY&quot; &quot;QQQ&quot; &quot;IWM&quot;</code></pre>
+<pre class="r"><code># Remove existing objects to avoid invalid data
+rm.strat(portfolio.st)
+rm.strat(account.st)</code></pre>
+<pre class="r"><code># Initialize portfolio object
+initPortf(name               =         portfolio.st, 
+          symbols            =         symbols, 
+          initDate           =         init_date)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># Initialize account object
+initAcct(name                =         account.st, 
+         portfolios          =         portfolio.st, 
+         initDate            =         init_date, 
+         initEq              =         100000)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># Set up portfolio
+initOrders(portfolio         =         portfolio.st, 
+           symbols           =         symbols, 
+           initDate          =         init_date)</code></pre>
+<pre class="r"><code>strategy(strategy.st, 
+         store               =         TRUE)</code></pre>
+</div>
+<div id="add-indicators" class="section level2">
+<h2>Add Indicators</h2>
+<pre class="r"><code># Add fast SMA `nFast`
+add.indicator(strategy       =         strategy.st,
+              # TTR:SMA()
+              name           =         &quot;SMA&quot;,
+              # Parameters for TTR:SMA()
+              arguments      =         list(x         =    quote(Cl(mktdata)), 
+                                            n         =    nFast),
+              # Var name for indicator
+              label          =         &quot;nFast&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># Add slow SMA `nSlow`
+add.indicator(strategy       =         strategy.st, 
+              name           =         &quot;SMA&quot;, 
+              arguments      =         list(x         =     quote(Cl(mktdata)), 
+                                            n         =     nSlow), 
+              label          =         &quot;nSlow&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+</div>
+<div id="add-signals" class="section level2">
+<h2>Add Signals</h2>
+<pre class="r"><code># Add new var `long` when `nFast` is gte `nSlow`
+add.signal(strategy        =           strategy.st,
+           # quantstrat:sigCrossover
+           name            =           &quot;sigCrossover&quot;,
+           # Vars to compare for crossover
+           arguments       =           list(columns        = c(&quot;nFast&quot;, 
+                                                               &quot;nSlow&quot;),
+                                            relationship   = &quot;gte&quot;),
+           # Var to store crossover values.
+           label           =           &quot;long&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># Add new var `short` when `nFast` is lt `nSlow`
+add.signal(strategy        =           strategy.st,
+           name            =           &quot;sigCrossover&quot;,
+           arguments       =           list(columns        = c(&quot;nFast&quot;, 
+                                                               &quot;nSlow&quot;), 
+                                            relationship   = &quot;lt&quot;),
+           label           =           &quot;short&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+</div>
+<div id="add-rules" class="section level2">
+<h2>Add Rules</h2>
+<pre class="r"><code># When `long` is TRUE, set SL order, BTO 100 shares on high of next bar. 
+add.rule(strategy       =    strategy.st,
+         name           =    &quot;ruleSignal&quot;,
+         arguments      =    list(sigcol         =    &quot;long&quot;,
+                                  sigval         =    TRUE,
+                                  orderqty       =    100,
+                                  ordertype      =    &quot;stoplimit&quot;,
+                                  orderside      =    &quot;long&quot;, 
+                                  threshold      =    0.0005,
+                                  prefer         =    &quot;High&quot;, 
+                                  # Deduce transactions fees
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  # Do not replace any existing orders
+                                  replace        =    FALSE),
+         type           =    &quot;enter&quot;,
+         # Var indicating order
+         label          =    &quot;EnterLONG&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># When `short` is TRUE, set SL order, STO 100 shares on low of next bar
+add.rule(strategy.st,
+         name           =    &quot;ruleSignal&quot;,
+         arguments      =    list(sigcol         =    &quot;short&quot;,
+                                  sigval         =    TRUE,
+                                  orderqty       =    -100,
+                                  ordertype      =    &quot;stoplimit&quot;,
+                                  threshold      =    -0.005, 
+                                  orderside      =    &quot;short&quot;, 
+                                  replace        =    FALSE, 
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  prefer         =    &quot;Low&quot;),
+         type           =    &quot;enter&quot;,
+         label          =    &quot;EnterSHORT&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># When `short` is TRUE, liquidate all long positions at market price.
+add.rule(strategy.st, 
+         name           = &quot;ruleSignal&quot;, 
+         arguments      = list(sigcol            =    &quot;short&quot;, 
+                               sigval            =    TRUE, 
+                               orderside         =    &quot;long&quot;, 
+                               ordertype         =    &quot;market&quot;, 
+                               orderqty          =    &quot;all&quot;, 
+                               TxnFees           =    abs(transaction_fees) * -1, 
+                               # Replace existing orders
+                               replace           =    TRUE), 
+         type           = &quot;exit&quot;, 
+         label          = &quot;Exit2SHORT&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># When `long` is TRUE, liquidate all short positions at market price.
+add.rule(strategy.st, 
+         name           =    &quot;ruleSignal&quot;, 
+         arguments      =    list(sigcol         =    &quot;long&quot;, 
+                                  sigval         =    TRUE, 
+                                  orderside      =    &quot;short&quot;, 
+                                  ordertype      =    &quot;market&quot;, 
+                                  orderqty       =    &quot;all&quot;, 
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  replace        =    TRUE), 
+         type           =    &quot;exit&quot;, 
+         label          =    &quot;Exit2LONG&quot;)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+</div>
+<div id="apply-strategy" class="section level2">
+<h2>Apply Strategy</h2>
+<pre class="r"><code># Apply strategy
+applyStrategy(strategy.st, 
+              portfolios          =         portfolio.st)</code></pre>
+<pre><code>## [1] &quot;2008-03-06 00:00:00 IWM -100 @ 64.9171736894573&quot;
+## [1] &quot;2008-04-02 00:00:00 IWM 100 @ 69.0985241018387&quot;
+## [1] &quot;2008-04-02 00:00:00 IWM 100 @ 69.0401009872818&quot;
+## [1] &quot;2008-06-20 00:00:00 IWM -100 @ 70.6662903711489&quot;
+## [1] &quot;2008-06-20 00:00:00 IWM -100 @ 70.8073564345631&quot;
+## [1] &quot;2008-07-29 00:00:00 IWM 100 @ 69.5715075344474&quot;
+## [1] &quot;2008-07-29 00:00:00 IWM 100 @ 69.2396867863757&quot;
+## [1] &quot;2008-09-10 00:00:00 IWM -100 @ 69.8549552270084&quot;
+## [1] &quot;2008-09-10 00:00:00 IWM -100 @ 68.9605160506826&quot;
+## [1] &quot;2008-12-17 00:00:00 IWM 100 @ 47.7688526000222&quot;
+## [1] &quot;2008-12-17 00:00:00 IWM 100 @ 47.4853057012319&quot;
+## [1] &quot;2009-01-21 00:00:00 IWM -100 @ 44.8955347780145&quot;
+## [1] &quot;2009-01-21 00:00:00 IWM -100 @ 42.7390222168234&quot;
+## [1] &quot;2009-03-25 00:00:00 IWM 100 @ 42.3091199858021&quot;
+## [1] &quot;2009-03-25 00:00:00 IWM 100 @ 42.6858780692031&quot;
+## [1] &quot;2009-06-29 00:00:00 IWM -100 @ 50.7253970716743&quot;
+## [1] &quot;2009-06-29 00:00:00 IWM -100 @ 50.0668979097124&quot;
+## [1] &quot;2009-07-23 00:00:00 IWM 100 @ 54.1819594612494&quot;
+## [1] &quot;2009-07-23 00:00:00 IWM 100 @ 52.8708844053091&quot;
+## [1] &quot;2009-10-29 00:00:00 IWM -100 @ 57.6758425763145&quot;
+## [1] &quot;2009-10-30 00:00:00 IWM -100 @ 56.3561799584465&quot;
+## [1] &quot;2009-11-25 00:00:00 IWM 100 @ 59.0901028389644&quot;
+## [1] &quot;2009-11-25 00:00:00 IWM 100 @ 59.4486442014224&quot;
+## [1] &quot;2008-04-01 00:00:00 QQQ 100 @ 44.1409191576017&quot;
+## [1] &quot;2008-06-16 00:00:00 QQQ -100 @ 48.394799090994&quot;
+## [1] &quot;2008-06-20 00:00:00 QQQ -100 @ 47.060925482166&quot;
+## [1] &quot;2008-08-07 00:00:00 QQQ 100 @ 45.9178189758063&quot;
+## [1] &quot;2008-08-07 00:00:00 QQQ 100 @ 46.4542097941498&quot;
+## [1] &quot;2008-09-05 00:00:00 QQQ -100 @ 43.1192842104301&quot;
+## [1] &quot;2008-09-05 00:00:00 QQQ -100 @ 42.9505761693338&quot;
+## [1] &quot;2008-12-17 00:00:00 QQQ 100 @ 29.9804054993739&quot;
+## [1] &quot;2009-01-02 00:00:00 QQQ 100 @ 30.4476415092302&quot;
+## [1] &quot;2009-01-22 00:00:00 QQQ -100 @ 28.6017982056571&quot;
+## [1] &quot;2009-02-09 00:00:00 QQQ 100 @ 31.3371711217057&quot;
+## [1] &quot;2009-02-25 00:00:00 QQQ -100 @ 28.4327333344832&quot;
+## [1] &quot;2009-02-26 00:00:00 QQQ -100 @ 27.8011978173983&quot;
+## [1] &quot;2009-03-24 00:00:00 QQQ 100 @ 30.2130420381431&quot;
+## [1] &quot;2009-03-25 00:00:00 QQQ 100 @ 30.8211907640353&quot;
+## [1] &quot;2009-07-07 00:00:00 QQQ -100 @ 34.4391488950442&quot;
+## [1] &quot;2009-07-07 00:00:00 QQQ -100 @ 34.9428090550046&quot;
+## [1] &quot;2009-07-22 00:00:00 QQQ 100 @ 38.3987046295369&quot;
+## [1] &quot;2009-07-22 00:00:00 QQQ 100 @ 38.1094666362571&quot;
+## [1] &quot;2009-11-04 00:00:00 QQQ -100 @ 41.2611501025559&quot;
+## [1] &quot;2009-11-16 00:00:00 QQQ 100 @ 44.1263679540621&quot;
+## [1] &quot;2008-02-27 00:00:00 SPY 100 @ 132.614634803726&quot;
+## [1] &quot;2008-03-07 00:00:00 SPY -100 @ 123.795471213218&quot;
+## [1] &quot;2008-03-07 00:00:00 SPY -100 @ 123.852732461276&quot;
+## [1] &quot;2008-04-02 00:00:00 SPY 100 @ 131.112635384238&quot;
+## [1] &quot;2008-04-02 00:00:00 SPY 100 @ 131.448335531036&quot;
+## [1] &quot;2008-06-03 00:00:00 SPY -100 @ 132.445820724918&quot;
+## [1] &quot;2008-06-03 00:00:00 SPY -100 @ 132.35450314633&quot;
+## [1] &quot;2008-08-06 00:00:00 SPY 100 @ 124.278743650048&quot;
+## [1] &quot;2008-08-06 00:00:00 SPY 100 @ 123.922596506223&quot;
+## [1] &quot;2008-09-08 00:00:00 SPY -100 @ 122.408735472142&quot;
+## [1] &quot;2008-09-11 00:00:00 SPY -100 @ 117.593755514598&quot;
+## [1] &quot;2008-12-17 00:00:00 SPY 100 @ 88.2151393863605&quot;
+## [1] &quot;2008-12-17 00:00:00 SPY 100 @ 89.2142272240349&quot;
+## [1] &quot;2009-01-21 00:00:00 SPY -100 @ 82.1482804957868&quot;
+## [1] &quot;2009-02-05 00:00:00 SPY -100 @ 78.2337848354101&quot;
+## [1] &quot;2009-03-24 00:00:00 SPY 100 @ 79.3401795287226&quot;
+## [1] &quot;2009-03-24 00:00:00 SPY 100 @ 81.0042669325843&quot;
+## [1] &quot;2009-06-26 00:00:00 SPY -100 @ 90.9151614242424&quot;
+## [1] &quot;2009-07-06 00:00:00 SPY -100 @ 88.0443705474731&quot;
+## [1] &quot;2009-07-23 00:00:00 SPY 100 @ 96.6765615751133&quot;
+## [1] &quot;2009-07-23 00:00:00 SPY 100 @ 95.1624618424955&quot;
+## [1] &quot;2009-11-04 00:00:00 SPY -100 @ 104.358164647123&quot;
+## [1] &quot;2009-11-16 00:00:00 SPY 100 @ 109.788926041296&quot;</code></pre>
+<pre class="r"><code># Update portfolio and account objects.
+updatePortf(portfolio.st)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code>updateAcct(account.st)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code>updateEndEq(account.st)</code></pre>
+<pre><code>## [1] &quot;Luxor&quot;</code></pre>
+<pre class="r"><code># Compare portfolio and accoutn objects for accuracy, validation.
+checkBlotterUpdate(portfolio.st, 
+                   account.st, 
+                   verbose        =         TRUE)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="chart-positions" class="section level2">
+<h2>Chart Positions</h2>
+<pre class="r"><code># Print charts for each symbol showing transactions, PnL, Drawdown
+# Assign to x to suppress R output
+x &lt;- map(symbols, 
+         chart.Posn, 
+         Portfolio      =    portfolio.st, 
+         TA             =    paste(sprintf(&quot;add_SMA(n = %d, col = %d)&quot;, 
+                                           nFast, 
+                                           nFast_col),
+                                   sprintf(&quot;add_SMA(n = %d, col = %d)&quot;, 
+                                           nSlow, 
+                                           nSlow_col), 
+                                   sep = &quot;;&quot;))</code></pre>
+<p><img src="luxor_files/figure-html/unnamed-chunk-15-1.png" width="672" /><img src="luxor_files/figure-html/unnamed-chunk-15-2.png" width="672" /><img src="luxor_files/figure-html/unnamed-chunk-15-3.png" width="672" /></p>
+</div>
+<div id="trade-analysis" class="section level2">
+<h2>Trade Analysis</h2>
+<pre class="r"><code>tstats &lt;- tradeStats(portfolio.st)
+kable(t(tstats))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">IWM</th>
+<th align="left">QQQ</th>
+<th align="left">SPY</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Portfolio</td>
+<td align="left">Luxor</td>
+<td align="left">Luxor</td>
+<td align="left">Luxor</td>
+</tr>
+<tr class="even">
+<td>Symbol</td>
+<td align="left">IWM</td>
+<td align="left">QQQ</td>
+<td align="left">SPY</td>
+</tr>
+<tr class="odd">
+<td>Num.Txns</td>
+<td align="left">23</td>
+<td align="left">21</td>
+<td align="left">23</td>
+</tr>
+<tr class="even">
+<td>Num.Trades</td>
+<td align="left">11</td>
+<td align="left">10</td>
+<td align="left">11</td>
+</tr>
+<tr class="odd">
+<td>Net.Trading.PL</td>
+<td align="left">2501.460</td>
+<td align="left">1070.748</td>
+<td align="left">2251.207</td>
+</tr>
+<tr class="even">
+<td>Avg.Trade.PL</td>
+<td align="left">211.1204</td>
+<td align="left">101.8385</td>
+<td align="left">200.5545</td>
+</tr>
+<tr class="odd">
+<td>Med.Trade.PL</td>
+<td align="left">51.52684</td>
+<td align="left">-45.13684</td>
+<td align="left">-120.63947</td>
+</tr>
+<tr class="even">
+<td>Largest.Winner</td>
+<td align="left">2109.166</td>
+<td align="left">1287.017</td>
+<td align="left">2927.862</td>
+</tr>
+<tr class="odd">
+<td>Largest.Loser</td>
+<td align="left">-428.1350</td>
+<td align="left">-355.5896</td>
+<td align="left">-891.9164</td>
+</tr>
+<tr class="even">
+<td>Gross.Profits</td>
+<td align="left">3724.335</td>
+<td align="left">2463.680</td>
+<td align="left">5705.846</td>
+</tr>
+<tr class="odd">
+<td>Gross.Losses</td>
+<td align="left">-1402.011</td>
+<td align="left">-1445.295</td>
+<td align="left">-3499.746</td>
+</tr>
+<tr class="even">
+<td>Std.Dev.Trade.PL</td>
+<td align="left">732.3649</td>
+<td align="left">515.1777</td>
+<td align="left">1149.6862</td>
+</tr>
+<tr class="odd">
+<td>Percent.Positive</td>
+<td align="left">63.63636</td>
+<td align="left">50.00000</td>
+<td align="left">45.45455</td>
+</tr>
+<tr class="even">
+<td>Percent.Negative</td>
+<td align="left">36.36364</td>
+<td align="left">50.00000</td>
+<td align="left">54.54545</td>
+</tr>
+<tr class="odd">
+<td>Profit.Factor</td>
+<td align="left">2.656424</td>
+<td align="left">1.704621</td>
+<td align="left">1.630360</td>
+</tr>
+<tr class="even">
+<td>Avg.Win.Trade</td>
+<td align="left">532.0479</td>
+<td align="left">492.7360</td>
+<td align="left">1141.1692</td>
+</tr>
+<tr class="odd">
+<td>Med.Win.Trade</td>
+<td align="left">152.6189</td>
+<td align="left">351.7958</td>
+<td align="left">909.5703</td>
+</tr>
+<tr class="even">
+<td>Avg.Losing.Trade</td>
+<td align="left">-350.5026</td>
+<td align="left">-289.0589</td>
+<td align="left">-583.2910</td>
+</tr>
+<tr class="odd">
+<td>Med.Losing.Trade</td>
+<td align="left">-352.4492</td>
+<td align="left">-300.4438</td>
+<td align="left">-726.2925</td>
+</tr>
+<tr class="even">
+<td>Avg.Daily.PL</td>
+<td align="left">211.1204</td>
+<td align="left">101.8385</td>
+<td align="left">200.5545</td>
+</tr>
+<tr class="odd">
+<td>Med.Daily.PL</td>
+<td align="left">51.52684</td>
+<td align="left">-45.13684</td>
+<td align="left">-120.63947</td>
+</tr>
+<tr class="even">
+<td>Std.Dev.Daily.PL</td>
+<td align="left">732.3649</td>
+<td align="left">515.1777</td>
+<td align="left">1149.6862</td>
+</tr>
+<tr class="odd">
+<td>Ann.Sharpe</td>
+<td align="left">4.576179</td>
+<td align="left">3.138017</td>
+<td align="left">2.769194</td>
+</tr>
+<tr class="even">
+<td>Max.Drawdown</td>
+<td align="left">-1691.308</td>
+<td align="left">-1343.709</td>
+<td align="left">-2942.752</td>
+</tr>
+<tr class="odd">
+<td>Profit.To.Max.Draw</td>
+<td align="left">1.4790094</td>
+<td align="left">0.7968602</td>
+<td align="left">0.7650008</td>
+</tr>
+<tr class="even">
+<td>Avg.WinLoss.Ratio</td>
+<td align="left">1.517957</td>
+<td align="left">1.704621</td>
+<td align="left">1.956432</td>
+</tr>
+<tr class="odd">
+<td>Med.WinLoss.Ratio</td>
+<td align="left">0.4330239</td>
+<td align="left">1.1709206</td>
+<td align="left">1.2523471</td>
+</tr>
+<tr class="even">
+<td>Max.Equity</td>
+<td align="left">2961.741</td>
+<td align="left">1893.009</td>
+<td align="left">3482.502</td>
+</tr>
+<tr class="odd">
+<td>Min.Equity</td>
+<td align="left">-678.91818</td>
+<td align="left">-52.69256</td>
+<td align="left">-2053.06787</td>
+</tr>
+<tr class="even">
+<td>End.Equity</td>
+<td align="left">2501.460</td>
+<td align="left">1070.748</td>
+<td align="left">2251.207</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="cash-sharpe-ratio" class="section level2">
+<h2>Cash Sharpe Ratio</h2>
+<pre class="r"><code>portfolio.pnl &lt;- .blotter$portfolio.Luxor$summary$Net.Trading.PL
+SharpeRatio.annualized(R         = portfolio.pnl, 
+                       geometric = FALSE)</code></pre>
+<pre><code>##                                 Net.Trading.PL
+## Annualized Sharpe Ratio (Rf=0%)      0.4901061</code></pre>
+<pre class="r"><code>instrument.returns &lt;- PortfReturns(portfolio.st)
+SharpeRatio.annualized(R         = instrument.returns, 
+                       geometric = FALSE)</code></pre>
+<pre><code>##                                 IWM.DailyEndEq QQQ.DailyEndEq
+## Annualized Sharpe Ratio (Rf=0%)      0.6108375      0.4967825
+##                                 SPY.DailyEndEq
+## Annualized Sharpe Ratio (Rf=0%)      0.3518516</code></pre>
+</div>
+<div id="performance-summary" class="section level2">
+<h2>Performance Summary</h2>
+<pre class="r"><code>returns &lt;- PortfReturns(Account = account.st)
+rownames(returns) &lt;- NULL
+charts.PerformanceSummary(returns, 
+                          colorset = bluefocus)</code></pre>
+<p><img src="luxor_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+</div>
+<div id="portfolio-summary" class="section level2">
+<h2>Portfolio Summary</h2>
+<pre class="r"><code>port &lt;- getPortfolio(portfolio.st)
+xyplot(x      =    port$summary, 
+       type   =    &quot;h&quot;, 
+       col    =    4)</code></pre>
+<p><img src="luxor_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session Info</h2>
+<p><strong>R version 3.3.2 (2016-10-31)</strong></p>
+<p>**<a href="Platform:**" class="uri">Platform:**</a> x86_64-pc-linux-gnu (64-bit)</p>
+<p><strong>locale:</strong> <em>LC_CTYPE=en_US.UTF-8</em>, <em>LC_NUMERIC=C</em>, <em>LC_TIME=en_US.UTF-8</em>, <em>LC_COLLATE=en_US.UTF-8</em>, <em>LC_MONETARY=en_US.UTF-8</em>, <em>LC_MESSAGES=en_US.UTF-8</em>, <em>LC_PAPER=en_US.UTF-8</em>, <em>LC_NAME=C</em>, <em>LC_ADDRESS=C</em>, <em>LC_TELEPHONE=C</em>, <em>LC_MEASUREMENT=en_US.UTF-8</em> and <em>LC_IDENTIFICATION=C</em></p>
+<p><strong>attached base packages:</strong></p>
+<ul>
+<li>stats</li>
+<li>graphics</li>
+<li>grDevices</li>
+<li>utils</li>
+<li>datasets</li>
+<li>methods</li>
+<li>base</li>
+</ul>
+<p><strong>other attached packages:</strong></p>
+<ul>
+<li>tidyquant(v.0.3.0)</li>
+<li>dplyr(v.0.5.0)</li>
+<li>readr(v.1.0.0)</li>
+<li>tidyr(v.0.6.1)</li>
+<li>tibble(v.1.2)</li>
+<li>ggplot2(v.2.2.1)</li>
+<li>tidyverse(v.1.1.1.9000)</li>
+<li>lubridate(v.1.6.0)</li>
+<li>pander(v.0.6.0)</li>
+<li>lattice(v.0.20-34)</li>
+<li>quantstrat(v.0.10.0)</li>
+<li>foreach(v.1.4.3)</li>
+<li>blotter(v.0.9.1741)</li>
+<li>PerformanceAnalytics(v.1.4.3541)</li>
+<li>FinancialInstrument(v.1.2.0)</li>
+<li>quantmod(v.0.4-7)</li>
+<li>TTR(v.0.23-1)</li>
+<li>xts(v.0.9-7)</li>
+<li>zoo(v.1.7-14)</li>
+<li>purrr(v.0.2.2)</li>
+<li>knitr(v.1.15.1)</li>
+</ul>
+<p><strong>loaded via a namespace (and not attached):</strong></p>
+<ul>
+<li>Rcpp(v.0.12.9)</li>
+<li>assertthat(v.0.1)</li>
+<li>rprojroot(v.1.2)</li>
+<li>digest(v.0.6.12)</li>
+<li>psych(v.1.6.9)</li>
+<li>R6(v.2.2.0)</li>
+<li>plyr(v.1.8.4)</li>
+<li>backports(v.1.0.5)</li>
+<li>acepack(v.1.4.1)</li>
+<li>evaluate(v.0.10)</li>
+<li>httr(v.1.2.1)</li>
+<li>highr(v.0.6)</li>
+<li>lazyeval(v.0.2.0)</li>
+<li>curl(v.2.3)</li>
+<li>readxl(v.0.1.1)</li>
+<li>data.table(v.1.10.4)</li>
+<li>rpart(v.4.1-10)</li>
+<li>Matrix(v.1.2-7.1)</li>
+<li>checkmate(v.1.8.2)</li>
+<li>rmarkdown(v.1.3)</li>
+<li>splines(v.3.3.2)</li>
+<li>servr(v.0.5)</li>
+<li>stringr(v.1.1.0)</li>
+<li>selectr(v.0.3-0)</li>
+<li>foreign(v.0.8-67)</li>
+<li>htmlwidgets(v.0.8)</li>
+<li>munsell(v.0.4.3)</li>
+<li>broom(v.0.4.1)</li>
+<li>httpuv(v.1.3.3)</li>
+<li>modelr(v.0.1.0)</li>
+<li>base64enc(v.0.1-3)</li>
+<li>mnormt(v.1.5-5)</li>
+<li>htmltools(v.0.3.5)</li>
+<li>nnet(v.7.3-12)</li>
+<li>htmlTable(v.1.9)</li>
+<li>gridExtra(v.2.2.1)</li>
+<li>Hmisc(v.4.0-2)</li>
+<li>codetools(v.0.2-15)</li>
+<li>XML(v.3.98-1.5)</li>
+<li>grid(v.3.3.2)</li>
+<li>nlme(v.3.1-129)</li>
+<li>jsonlite(v.1.2)</li>
+<li>gtable(v.0.2.0)</li>
+<li>DBI(v.0.5-1)</li>
+<li>magrittr(v.1.5)</li>
+<li>scales(v.0.4.1)</li>
+<li>BatchGetSymbols(v.1.1)</li>
+<li>stringi(v.1.1.2)</li>
+<li>reshape2(v.1.4.2)</li>
+<li>latticeExtra(v.0.6-28)</li>
+<li>xml2(v.1.1.1)</li>
+<li>Formula(v.1.2-1)</li>
+<li>RColorBrewer(v.1.1-2)</li>
+<li>iterators(v.1.0.8)</li>
+<li>tools(v.3.3.2)</li>
+<li>forcats(v.0.2.0)</li>
+<li>hms(v.0.3)</li>
+<li>parallel(v.3.3.2)</li>
+<li>survival(v.2.40-1)</li>
+<li>yaml(v.2.1.14)</li>
+<li>colorspace(v.1.3-0)</li>
+<li>cluster(v.2.0.5)</li>
+<li>rvest(v.0.3.2)</li>
+<li>haven(v.1.0.0)</li>
+</ul>
+</div>
+
+&copy; 2017 <a href="http://timtrice.net/" title="Tim Trice">Tim Trice</a>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+---
+title: Backtesting Strategies with R
+output:
+  html_document:
+    toc: false
+    toc_float: false
+---
+
+## Basics
+
+[Get Symbols](get-symbols.html)
+Find symbols by name, index, sector and other methods.
+
+[Get OHLCVA Data](get-ohlcva-data.html)
+Retrieve pricing data for one or multiple tickers. 
+
+
+## Strategies
+
+[Luxor](luxor.html)
+
+[Connors RSI](connorsRSI.html)
+
+[BBands](bbands.html)

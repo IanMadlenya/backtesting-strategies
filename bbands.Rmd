@@ -1,0 +1,320 @@
+---
+title: Bollinger Bands
+subtitle: NULL
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r libraries}
+library(knitr)
+library(lattice)
+library(purrr)          # For plotting multiple charts at once
+library(quantmod)
+library(quantstrat)
+```
+
+```{r includes}
+source("./_R/functions.R")   # for checkBlotterUpdate()
+```
+
+ * BTO when Cl < lower BB
+    + STC when Cl > mid BB
+ * STO when Cl > upper BB
+    + BTC when Cl < mid BB
+
+## Variables
+
+```{r variables}
+symbols            <-        c("IWM", "QQQ", "SPY")
+
+# Transaction Details
+shares             <-        100                    #' Shares to trade
+transaction_fees   <-        10                     #' Cost of trade, abs value
+
+# Indicators
+n                  <-        20                     #' bars
+ma                 <-        "SMA"                  #' Moving Average Type
+sd                 <-        2                      #' Standard deviation
+
+# Data params
+source             <-        "yahoo"                #' Yahoo, Google, FRED, etc.
+init_date          <-        "2009-12-31"           #' start_date - 1 day
+start_date         <-        "2010-01-01"           #' Begin trading
+end_date           <-        "2015-12-31"           #' End trading
+init_equity        <-        100000                 #' Initial equity
+
+# Portfolio, account and strategy names
+portfolio.st       <-        "BollingerBands"       #' Name of portfolio
+account.st         <-        "BollingerBands"       #' Name of account
+strategy.st        <-        "BollingerBands"       #' Name of strategy
+
+# Additional
+tz                 <-        "UTC"                  #' Time zone
+#' Currency abbr (ISO 4217); set for currency of symbols.
+curr               <-        "USD"
+adjustment         <-        TRUE
+```
+
+## Setup
+
+```{r timezone}
+Sys.setenv(TZ = tz)
+```
+
+```{r currency}
+currency(curr)
+```
+
+### Get Symbols
+
+```{r get.symbols}
+getSymbols(Symbols           =         symbols, 
+           src               =         source, 
+           from              =         start_date, 
+           to                =         end_date, 
+           # Adjust OHLC values for splits and dividencs, etc.
+           adjust            =         FALSE)
+```
+
+```{r stock}
+stock(symbols, 
+      currency               =         curr)
+```
+
+### Remove objects
+
+```{r rm.objects}
+# Remove existing objects to avoid invalid data
+rm.strat(portfolio.st)
+rm.strat(account.st)
+```
+
+### Initalize objects
+
+```{r init.portf}
+# Initialize portfolio object
+initPortf(name               =         portfolio.st, 
+          symbols            =         symbols, 
+          initDate           =         init_date)
+```
+
+```{r init.acct}
+# Initialize account object
+initAcct(name                =         account.st, 
+         portfolios          =         portfolio.st, 
+         initDate            =         init_date, 
+         initEq              =         100000)
+```
+
+```{r init.orders}
+# Set up portfolio
+initOrders(portfolio         =         portfolio.st, 
+           symbols           =         symbols, 
+           initDate          =         init_date)
+```
+
+```{r init.strategy}
+strategy(strategy.st, 
+         store               =         TRUE)
+```
+
+## Add Indicators
+
+```{r add.indicators}
+# Add SMA(5) `SMA5`
+add.indicator(strategy       =         strategy.st,
+              # TTR:SMA()
+              name           =         "BBands",
+              # Parameters for TTR:SMA()
+              arguments      =         list(HLC       =    quote(HLC(mktdata)), 
+                                            n         =    n, 
+                                            maType    =    ma, 
+                                            sd        =    sd),
+              # Var name for indicator
+              label          =         "BB")
+
+# Apply indicators
+ind <- applyIndicators(strategy = strategy.st, 
+                       mktdata  = OHLC(SPY))
+```
+
+## Add Signals
+
+```{r add.signals}
+# `Cl.gt.UpperBand` when Close x> up.BB
+add.signal(strategy        =          strategy.st,
+           name            =          "sigCrossover",
+           arguments       =          list(columns        =    c("Close", 
+                                                                 "up.BB"), 
+                                           relationship   =    "gt"), 
+           label           =          "Cl.gt.up.BB")
+
+# `Cl.lt.LoerBand` when Close x< dn.BB
+add.signal(strategy        =          strategy.st,
+           name            =          "sigCrossover",
+           arguments       =          list(columns        =    c("Close", 
+                                                                 "dn.BB"), 
+                                           relationship   =    "lt"), 
+           label           =          "Cl.lt.dn.BB")
+
+# `
+add.signal(strategy        =           strategy.st, 
+           name            =           "sigCrossover",
+           arguments       =           list(columns       =    c("High",
+                                                                 "Low",
+                                                                 "mavg.BB"), 
+                                       relationship       =    "op"),
+           label           =          "Cross.Mid")
+
+sig <- applySignals(strategy = strategy.st, 
+                    mktdata  = ind)
+```
+
+## Add Rules
+
+```{r add.rules}
+add.rule(strategy          =           strategy.st, 
+         name              =           "ruleSignal",  
+         arguments         =           list(sigcol        =   "Cl.gt.up.BB",
+                                            sigval        =   TRUE,
+                                            orderqty      =   shares * -1,
+                                            ordertype     =   "market",
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           "enter")
+
+add.rule(strategy          =           strategy.st, 
+         name              =           "ruleSignal",  
+         arguments         =           list(sigcol        =   "Cl.lt.dn.BB",
+                                            sigval        =   TRUE,
+                                            orderqty      =   shares,
+                                            ordertype     =   "market",
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           "enter")
+
+add.rule(strategy          =           strategy.st, 
+         name              =           "ruleSignal",  
+         arguments         =           list(sigcol        =   "Cross.Mid",
+                                            sigval        =   TRUE,
+                                            orderqty      =   "all",
+                                            ordertype     =   "market",
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           "exit")
+```
+
+## Add Position Limit
+
+```{r position.limits}
+for(symbol in symbols){
+    addPosLimit(portfolio = portfolio.st,
+                symbol    = symbol,
+                timestamp = init_date,
+                maxpos    = shares)
+}
+```
+
+## Apply Strategy
+
+```{r apply.strategy, results = "hide"}
+# Apply strategy
+applyStrategy(strategy.st, 
+              portfolios          =         portfolio.st)
+```
+
+## Update Portfolio and Account objects
+
+```{r update.objects}
+updatePortf(portfolio.st)
+updateAcct(account.st)
+updateEndEq(account.st)
+```
+
+## Validate Portfolio vs Account
+
+```{r checkBlotterUpdate}
+checkBlotterUpdate(portfolio.st, 
+                   account.st, 
+                   verbose        =         TRUE)
+```
+
+## Chart Positions
+
+```{r chart.posn}
+# Print charts for each symbol showing transactions, PnL, Drawdown
+# Assign to x to suppress R output
+x <- map(symbols, 
+         chart.Posn, 
+         Portfolio      =    portfolio.st, 
+         TA             =    paste(
+             sprintf("add_BBands(n = %d, sd = %d, maType = %s, on = -1)",
+                     n, 
+                     sd, 
+                     ma),
+                     sep = ";"))
+```
+
+## Trade Analysis
+
+```{r tstats}
+tstats <- tradeStats(portfolio.st)
+kable(t(tstats))
+```
+
+## Cash Sharpe Ratio
+
+```{r portfolio.sharpe}
+portfolio.pnl <- .blotter$portfolio.BollingerBands$summary$Net.Trading.PL
+SharpeRatio.annualized(R         = portfolio.pnl, 
+                       geometric = FALSE)
+```
+
+```{r instrument.sharpe}
+instrument.returns <- PortfReturns(portfolio.st)
+SharpeRatio.annualized(R         = instrument.returns, 
+                       geometric = FALSE)
+```
+
+## Performance Summary
+
+```{r}
+returns <- PortfReturns(Account = account.st)
+rownames(returns) <- NULL
+charts.PerformanceSummary(returns, 
+                          colorset = bluefocus)
+```
+
+## Portfolio Summary
+
+```{r}
+port <- getPortfolio(portfolio.st)
+xyplot(x      =    port$summary, 
+       type   =    "h", 
+       col    =    4)
+```
+
+## Account Summary
+
+```{r}
+a <- getAccount(account.st)
+xyplot(a$summary, type = "h", col = 4)
+```
+
+## Equity Curve
+
+```{r}
+plot(a$summary$End.Eq, main = "Equity Curve")
+```
+
+## Session Info
+
+```{r sessioninfo, echo = FALSE, child="_sessioninfo.Rmd"}
+```

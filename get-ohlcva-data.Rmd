@@ -1,0 +1,99 @@
+---
+title: Get OHCLVA Data
+subtitle: How to retrieve pricing data for one or multiple tickers. 
+abstract: Retrieving open, high, low, close, volume and adjusted data for one or more tickers (symbols).
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r libraries}
+library(quantmod)
+library(tidyquant)
+library(tidyverse)
+```
+
+## Quantmod
+
+Generally, stock and other data can be retrieved using `quantmod`. By default, Yahoo! is the source of data. The returned object (`SPY`) is an xts object.
+
+```{r}
+quantmod::getSymbols("SPY", from = "2016-01-01", to = "2017-01-01")
+```
+
+```{r}
+class(SPY)
+```
+
+OHLC data is not adjusted by default. Set the `adjust` parameter to TRUE. 
+
+To pass multiple symbols enclose the symbols in a character vector.
+
+### Sources
+
+The `src` parameter allows one of the following:
+
+    * Yahoo!
+    
+    * Google: Do not use Google if you need OHL data; on abbreviated trading days this data is `NA`; only Close, Volume, and Adjusted is included.
+    
+    * MySQL: Add parameters `dbname`, `user`, `password` and `host` to your call. These values can be stored in an .Renviron file in your project directory. See `?R_ENVIRON` for info.
+    
+    * RData
+    
+    * CSV
+    
+    * [FRED](https://fred.stlouisfed.org/)
+
+## TidyQuant
+
+`tidyquant` aims to make it convenient to retrieve pricing data in tibble format for analysis and mining using `tidyverse` packages. 
+
+As of this writing, `tidyquant` requires `tidyverse` version 1.1.0. This version is not available in CRAN but you can install via github with `devtools::install_github("tidyverse/tidyverse"). 
+
+```{r}
+SPY <- tq_get("SPY", get = "stock.prices", from = "2016-01-01", to = "2017-01-01")
+```
+
+```{r}
+class(SPY)
+```
+
+## BatchGetSymbols
+
+`BatchGetSymbols` can be used to retrieve multiple symbols at one time. It is slightly faster than `quantmod` but the dataset is returned as a 2-dimensional list. 
+
+```{r}
+df <- BatchGetSymbols::BatchGetSymbols(tickers = c("SPY", "QQQ"),  
+                                        bench.ticker = "SPY",
+                                        first.date = as.Date("2016-01-01"),
+                                        last.date = as.Date("2017-01-01"), 
+                                        thresh.bad.data = 0.9)
+```
+
+The first list item, `df.control`, contains the status of the request.
+
+```{r}
+df$df.control
+```
+
+Much of this is self-explanatory. `threshold.decision` tells us if the symbol data was kept or not based on the `thresh.bad.data` parameter which itself is based on the `bench.ticker` parameter. Each symbol passed in `tickers` is compared against `bench.ticker`; if the number of observations does not meet the threshold versus the bench.ticker, the symbol is disregarded. 
+
+In the example above, "SPY" and "QQQ" each must have at least 90% of the observations of `bench.ticker` "SPY" else it is discarded. 
+
+The secondary list item, `df.tickers`, contains the OHLC data. 
+
+```{r}
+str(df$df.tickers)
+```
+
+With `tidyverse` packages you can manipulate and mine the datasets as needed. 
+
+```{r, child="_sessioninfo.Rmd"}
+```

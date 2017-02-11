@@ -1,0 +1,29 @@
+---
+title: Get Symbols
+subtitle: How to find tickers. 
+abstract: Using R packages to search for tickers (symbols). 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r libraries}
+library(quantmod)
+library(tidyquant)
+library(tidyverse)
+```
+
+## Tidyquant
+
+The `tidyquant` package contains several methods of finding stock data. 
+
+```{r}
+sp500 <- tq_get("sp500", get = "stock.index")
+```
+

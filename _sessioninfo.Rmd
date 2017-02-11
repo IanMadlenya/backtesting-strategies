@@ -1,0 +1,5 @@
+
+```{r}
+library(pander)
+pander(sessionInfo(), compact = FALSE)
+```

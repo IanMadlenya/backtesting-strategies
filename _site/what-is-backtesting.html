@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>What is backtesting?</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Backtesting Strategies with R</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/timtrice/backtesting-strategies">
+    <span class="fa fa-github text-muted"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">What is backtesting?</h1>
+<h3 class="subtitle"><em>A brief look at backtesting and why it is important.</em></h3>
+
+</div>
+
+
+<p>Backtesting trading strategies can be an exciting (and profitable) method of exploring the stock market. It is a method of mining market data to find patterns and conditions that may precede another event from occuring (a market rally or a market collapse).</p>
+<p><strong>IT ISN’T WHAT YOU THINK IT IS</strong></p>
+<p>Backtesting trading strategies is not easy. It begins with an idea (usually obtained from data mining but can be something as simple as curiousity). The idea is converted to a script or program. The results are analyzed. The idea is discarded (non-profitable), slightly modified, or moved into a testing phase.</p>
+<p>If you do a search on Twitter such as “$AAPL” you will see thousands of people posting their ideas on what they think AAPL is going to do:</p>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+Short <a href="https://twitter.com/search?q=%24AAPL&amp;src=ctag">$AAPL</a> here. Thank me later.
+</p>
+— Arduous Investor (<span class="citation">@PapaSmurf100000</span>) <a href="https://twitter.com/PapaSmurf100000/status/828979857241624577">February 7, 2017</a>
+</blockquote>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+A lot can happen from now till year's end But <a href="https://twitter.com/search?q=%24aapl&amp;src=ctag">$aapl</a> chart implies 165 by december
+</p>
+— Chart_Guy (<span class="citation">@Chart_Guy</span>) <a href="https://twitter.com/Chart_Guy/status/828977586978058241">February 7, 2017</a>
+</blockquote>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+adding <a href="https://twitter.com/search?q=%24AAPL&amp;src=ctag">$AAPL</a> to 1% scalp list. looks good
+</p>
+— NorthPost Partners (<span class="citation">@NPPtrades</span>) <a href="https://twitter.com/NPPtrades/status/828976104350240769">February 7, 2017</a>
+</blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>I’m not trying to call anyone out here or suggest they’re wrong. But in just a few minutes I found three sides of a trade: bearish, neutral, and bullish. But what makes <span class="citation">@PapaSmurf100000</span> correct? Or, are they wrong and <span class="citation">@NPPtrades</span> is correct? Is <span class="citation">@Chart_Guy</span> onto something?</p>
+<p>On any given day there are billions of signals given that triggers buys and sells. That’s what moves the market. A trader in NYC sees a doji candlestick after a 1% drop and goes long. A trader in Chicago sees that doji, anticipates a slight midday correction and then adds to their short. An amateur in Junction City, Kansas just sees their account go red, panics, and liquidates the position.</p>
+<p>Trading the stock market is an emotionally intensive exercise. When I first started trading in 2008 (yup!) I couldn’t tell you how many times I would get down in the dumps for making a losing trade only to feel rejuvenated when I made a profitable trade.</p>
+<p>Backtesting gives us a way to remove those emotions and instill confidence. Additionally, it helps us define rules for a specific strategy:</p>
+<pre><code>1. Wait for a doji candle
+
+2. Buy on the next bar that exceeds the high of the doji candle. 
+
+3. Sell on the close of the third bar.</code></pre>
+<p>Is this strategy profitable? I honestly don’t know. But it’s an idea. We can test it. If it passes all tests, we can move it to a paper trading environment under real life conditions. If those tests pass, we can move it to a live account.</p>
+<p>In short, we developed an algorithm. We can let the computers do the work and monitor daily, weekly and monthly reports to make sure there are no inconsistencies.</p>
+<p><strong>PITFALLS OF BACKTESTING</strong></p>
+<p>A couple of years ago I had written a strategy based on NR7:</p>
+<pre><code>* The last bar (Bar -1) is the smallest trading range of the preceeding six bars
+
+* Buy if the current bar exceeds the high of Bar -1 **OR** short if current bar exceeds the low of Bar -1. 
+
+* Close in $n$ days.</code></pre>
+<p>When I ran the equity analysis I was stunned; it showed a significant profit margin with very little drawdown (relatively speaking). I was very anxious to move it to a paper trading account. But I knew I had to be careful.</p>
+<p>When you find a strategy that seems successful your priorities <strong>must</strong> change. You have to put on your scientist hat. You no longer are trying to find a strategy that is profitable in the market: it becomes your job to <em>prove it doesn’t work</em>.</p>
+<p>There are several reasons for this. First, and generally, most likely, you have an error in your script. In my case, I thought I had written the strategy to close in <span class="math inline">\(n\)</span> days. Instead, I kept buying. Second, your timeframe may be inadequate. When testing you need to have several years of data to test the strategy against. And this time frame must include not only when the ticker is rallying but selling off as well (any long strategy can be made profitable in a bull market).</p>
+<p>What you are trying to avoid is <strong>confirmation bias</strong>. In short, this is finding the proof to believe what you want to believe and ignoring the proof that invalidates your strategy. This is why we put our scientific hats on. In the science community, when a potential new discovery is made the scientist seeks anonymous peer review to validate that discovery. The data, tests and results are examined thoroughly by knowledgeable scientists; picked apart with a fine-tooth comb, seeking a desire to find the smallest error that invalidates the results (or, at least, require additional testing).</p>
+<p>As most of us will never want to share potentially profitable strategies with an anonymous community, it is up to you to do this work on your own.</p>
+
+&copy; 2017 <a href="http://timtrice.net/" title="Tim Trice">Tim Trice</a>
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

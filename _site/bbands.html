@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Bollinger Bands</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Backtesting Strategies with R</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/timtrice/backtesting-strategies">
+    <span class="fa fa-github text-muted"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Bollinger Bands</h1>
+<h4 class="date"><em>11 February, 2017</em></h4>
+
+</div>
+
+
+<pre class="r"><code>library(knitr)
+library(lattice)
+library(purrr)          # For plotting multiple charts at once
+library(quantmod)
+library(quantstrat)</code></pre>
+<pre class="r"><code>source(&quot;./_R/functions.R&quot;)   # for checkBlotterUpdate()</code></pre>
+<ul>
+<li>BTO when Cl &lt; lower BB
+<ul>
+<li>STC when Cl &gt; mid BB</li>
+</ul></li>
+<li>STO when Cl &gt; upper BB
+<ul>
+<li>BTC when Cl &lt; mid BB</li>
+</ul></li>
+</ul>
+<div id="variables" class="section level2">
+<h2>Variables</h2>
+<pre class="r"><code>symbols            &lt;-        c(&quot;IWM&quot;, &quot;QQQ&quot;, &quot;SPY&quot;)
+
+# Transaction Details
+shares             &lt;-        100                    #&#39; Shares to trade
+transaction_fees   &lt;-        10                     #&#39; Cost of trade, abs value
+
+# Indicators
+n                  &lt;-        20                     #&#39; bars
+ma                 &lt;-        &quot;SMA&quot;                  #&#39; Moving Average Type
+sd                 &lt;-        2                      #&#39; Standard deviation
+
+# Data params
+source             &lt;-        &quot;yahoo&quot;                #&#39; Yahoo, Google, FRED, etc.
+init_date          &lt;-        &quot;2009-12-31&quot;           #&#39; start_date - 1 day
+start_date         &lt;-        &quot;2010-01-01&quot;           #&#39; Begin trading
+end_date           &lt;-        &quot;2015-12-31&quot;           #&#39; End trading
+init_equity        &lt;-        100000                 #&#39; Initial equity
+
+# Portfolio, account and strategy names
+portfolio.st       &lt;-        &quot;BollingerBands&quot;       #&#39; Name of portfolio
+account.st         &lt;-        &quot;BollingerBands&quot;       #&#39; Name of account
+strategy.st        &lt;-        &quot;BollingerBands&quot;       #&#39; Name of strategy
+
+# Additional
+tz                 &lt;-        &quot;UTC&quot;                  #&#39; Time zone
+#&#39; Currency abbr (ISO 4217); set for currency of symbols.
+curr               &lt;-        &quot;USD&quot;
+adjustment         &lt;-        TRUE</code></pre>
+</div>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="r"><code>Sys.setenv(TZ = tz)</code></pre>
+<pre class="r"><code>currency(curr)</code></pre>
+<pre><code>## [1] &quot;USD&quot;</code></pre>
+<div id="get-symbols" class="section level3">
+<h3>Get Symbols</h3>
+<pre class="r"><code>getSymbols(Symbols           =         symbols, 
+           src               =         source, 
+           from              =         start_date, 
+           to                =         end_date, 
+           # Adjust OHLC values for splits and dividencs, etc.
+           adjust            =         FALSE)</code></pre>
+<pre><code>## [1] &quot;IWM&quot; &quot;QQQ&quot; &quot;SPY&quot;</code></pre>
+<pre class="r"><code>stock(symbols, 
+      currency               =         curr)</code></pre>
+<pre><code>## [1] &quot;IWM&quot; &quot;QQQ&quot; &quot;SPY&quot;</code></pre>
+</div>
+<div id="remove-objects" class="section level3">
+<h3>Remove objects</h3>
+<pre class="r"><code># Remove existing objects to avoid invalid data
+rm.strat(portfolio.st)
+rm.strat(account.st)</code></pre>
+</div>
+<div id="initalize-objects" class="section level3">
+<h3>Initalize objects</h3>
+<pre class="r"><code># Initialize portfolio object
+initPortf(name               =         portfolio.st, 
+          symbols            =         symbols, 
+          initDate           =         init_date)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code># Initialize account object
+initAcct(name                =         account.st, 
+         portfolios          =         portfolio.st, 
+         initDate            =         init_date, 
+         initEq              =         100000)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code># Set up portfolio
+initOrders(portfolio         =         portfolio.st, 
+           symbols           =         symbols, 
+           initDate          =         init_date)</code></pre>
+<pre class="r"><code>strategy(strategy.st, 
+         store               =         TRUE)</code></pre>
+</div>
+</div>
+<div id="add-indicators" class="section level2">
+<h2>Add Indicators</h2>
+<pre class="r"><code># Add SMA(5) `SMA5`
+add.indicator(strategy       =         strategy.st,
+              # TTR:SMA()
+              name           =         &quot;BBands&quot;,
+              # Parameters for TTR:SMA()
+              arguments      =         list(HLC       =    quote(HLC(mktdata)), 
+                                            n         =    n, 
+                                            maType    =    ma, 
+                                            sd        =    sd),
+              # Var name for indicator
+              label          =         &quot;BB&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code># Apply indicators
+ind &lt;- applyIndicators(strategy = strategy.st, 
+                       mktdata  = OHLC(SPY))</code></pre>
+</div>
+<div id="add-signals" class="section level2">
+<h2>Add Signals</h2>
+<pre class="r"><code># `Cl.gt.UpperBand` when Close x&gt; up.BB
+add.signal(strategy        =          strategy.st,
+           name            =          &quot;sigCrossover&quot;,
+           arguments       =          list(columns        =    c(&quot;Close&quot;, 
+                                                                 &quot;up.BB&quot;), 
+                                           relationship   =    &quot;gt&quot;), 
+           label           =          &quot;Cl.gt.up.BB&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code># `Cl.lt.LoerBand` when Close x&lt; dn.BB
+add.signal(strategy        =          strategy.st,
+           name            =          &quot;sigCrossover&quot;,
+           arguments       =          list(columns        =    c(&quot;Close&quot;, 
+                                                                 &quot;dn.BB&quot;), 
+                                           relationship   =    &quot;lt&quot;), 
+           label           =          &quot;Cl.lt.dn.BB&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code># `
+add.signal(strategy        =           strategy.st, 
+           name            =           &quot;sigCrossover&quot;,
+           arguments       =           list(columns       =    c(&quot;High&quot;,
+                                                                 &quot;Low&quot;,
+                                                                 &quot;mavg.BB&quot;), 
+                                       relationship       =    &quot;op&quot;),
+           label           =          &quot;Cross.Mid&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code>sig &lt;- applySignals(strategy = strategy.st, 
+                    mktdata  = ind)</code></pre>
+</div>
+<div id="add-rules" class="section level2">
+<h2>Add Rules</h2>
+<pre class="r"><code>add.rule(strategy          =           strategy.st, 
+         name              =           &quot;ruleSignal&quot;,  
+         arguments         =           list(sigcol        =   &quot;Cl.gt.up.BB&quot;,
+                                            sigval        =   TRUE,
+                                            orderqty      =   shares,
+                                            ordertype     =   &quot;market&quot;,
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           &quot;enter&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code>add.rule(strategy          =           strategy.st, 
+         name              =           &quot;ruleSignal&quot;,  
+         arguments         =           list(sigcol        =   &quot;Cl.lt.dn.BB&quot;,
+                                            sigval        =   TRUE,
+                                            orderqty      =   shares,
+                                            ordertype     =   &quot;market&quot;,
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           &quot;enter&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code>add.rule(strategy          =           strategy.st, 
+         name              =           &quot;ruleSignal&quot;,  
+         arguments         =           list(sigcol        =   &quot;Cross.Mid&quot;,
+                                            sigval        =   TRUE,
+                                            orderqty      =   &quot;all&quot;,
+                                            ordertype     =   &quot;market&quot;,
+                                            orderside     =   NULL,
+                                            osFUN         =   osMaxPos), 
+         type              =           &quot;exit&quot;)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+</div>
+<div id="add-position-limit" class="section level2">
+<h2>Add Position Limit</h2>
+<pre class="r"><code>for(symbol in symbols){
+    addPosLimit(portfolio = portfolio.st,
+                symbol    = symbol,
+                timestamp = init_date,
+                maxpos    = shares)
+}</code></pre>
+</div>
+<div id="apply-strategy" class="section level2">
+<h2>Apply Strategy</h2>
+<pre class="r"><code># Apply strategy
+applyStrategy(strategy.st, 
+              portfolios          =         portfolio.st)</code></pre>
+</div>
+<div id="update-portfolio-and-account-objects" class="section level2">
+<h2>Update Portfolio and Account objects</h2>
+<pre class="r"><code>updatePortf(portfolio.st)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code>updateAcct(account.st)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+<pre class="r"><code>updateEndEq(account.st)</code></pre>
+<pre><code>## [1] &quot;BollingerBands&quot;</code></pre>
+</div>
+<div id="validate-portfolio-vs-account" class="section level2">
+<h2>Validate Portfolio vs Account</h2>
+<pre class="r"><code>checkBlotterUpdate(portfolio.st, 
+                   account.st, 
+                   verbose        =         TRUE)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="chart-positions" class="section level2">
+<h2>Chart Positions</h2>
+<pre class="r"><code># Print charts for each symbol showing transactions, PnL, Drawdown
+# Assign to x to suppress R output
+x &lt;- map(symbols, 
+         chart.Posn, 
+         Portfolio      =    portfolio.st, 
+         TA             =    paste(
+             sprintf(&quot;add_BBands(n = %d, sd = %d, maType = %s, on = -1)&quot;,
+                     n, 
+                     sd, 
+                     ma),
+                     sep = &quot;;&quot;))</code></pre>
+<p><img src="bbands_files/figure-html/chart.posn-1.png" width="672" /><img src="bbands_files/figure-html/chart.posn-2.png" width="672" /><img src="bbands_files/figure-html/chart.posn-3.png" width="672" /></p>
+</div>
+<div id="trade-analysis" class="section level2">
+<h2>Trade Analysis</h2>
+<pre class="r"><code>tstats &lt;- tradeStats(portfolio.st)
+kable(t(tstats))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">IWM</th>
+<th align="left">QQQ</th>
+<th align="left">SPY</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Portfolio</td>
+<td align="left">BollingerBands</td>
+<td align="left">BollingerBands</td>
+<td align="left">BollingerBands</td>
+</tr>
+<tr class="even">
+<td>Symbol</td>
+<td align="left">IWM</td>
+<td align="left">QQQ</td>
+<td align="left">SPY</td>
+</tr>
+<tr class="odd">
+<td>Num.Txns</td>
+<td align="left">146</td>
+<td align="left">146</td>
+<td align="left">124</td>
+</tr>
+<tr class="even">
+<td>Num.Trades</td>
+<td align="left">73</td>
+<td align="left">73</td>
+<td align="left">62</td>
+</tr>
+<tr class="odd">
+<td>Net.Trading.PL</td>
+<td align="left">5463.000</td>
+<td align="left">3997.997</td>
+<td align="left">7048.007</td>
+</tr>
+<tr class="even">
+<td>Avg.Trade.PL</td>
+<td align="left">74.83561</td>
+<td align="left">54.76708</td>
+<td align="left">113.67753</td>
+</tr>
+<tr class="odd">
+<td>Med.Trade.PL</td>
+<td align="left">93.9995</td>
+<td align="left">51.0002</td>
+<td align="left">159.4997</td>
+</tr>
+<tr class="even">
+<td>Largest.Winner</td>
+<td align="left">627.9999</td>
+<td align="left">689.0000</td>
+<td align="left">1035.0006</td>
+</tr>
+<tr class="odd">
+<td>Largest.Loser</td>
+<td align="left">-703.9993</td>
+<td align="left">-301.0002</td>
+<td align="left">-1080.9998</td>
+</tr>
+<tr class="even">
+<td>Gross.Profits</td>
+<td align="left">10754.999</td>
+<td align="left">8538.998</td>
+<td align="left">12183.006</td>
+</tr>
+<tr class="odd">
+<td>Gross.Losses</td>
+<td align="left">-5292.000</td>
+<td align="left">-4541.001</td>
+<td align="left">-5134.999</td>
+</tr>
+<tr class="even">
+<td>Std.Dev.Trade.PL</td>
+<td align="left">262.9743</td>
+<td align="left">220.9642</td>
+<td align="left">343.6864</td>
+</tr>
+<tr class="odd">
+<td>Percent.Positive</td>
+<td align="left">64.38356</td>
+<td align="left">60.27397</td>
+<td align="left">67.74194</td>
+</tr>
+<tr class="even">
+<td>Percent.Negative</td>
+<td align="left">35.61644</td>
+<td align="left">39.72603</td>
+<td align="left">32.25806</td>
+</tr>
+<tr class="odd">
+<td>Profit.Factor</td>
+<td align="left">2.032313</td>
+<td align="left">1.880422</td>
+<td align="left">2.372543</td>
+</tr>
+<tr class="even">
+<td>Avg.Win.Trade</td>
+<td align="left">228.8298</td>
+<td align="left">194.0681</td>
+<td align="left">290.0716</td>
+</tr>
+<tr class="odd">
+<td>Med.Win.Trade</td>
+<td align="left">210.9993</td>
+<td align="left">145.4998</td>
+<td align="left">275.0008</td>
+</tr>
+<tr class="even">
+<td>Avg.Losing.Trade</td>
+<td align="left">-203.5384</td>
+<td align="left">-156.5862</td>
+<td align="left">-256.7500</td>
+</tr>
+<tr class="odd">
+<td>Med.Losing.Trade</td>
+<td align="left">-174.5002</td>
+<td align="left">-154.0001</td>
+<td align="left">-162.5000</td>
+</tr>
+<tr class="even">
+<td>Avg.Daily.PL</td>
+<td align="left">74.83561</td>
+<td align="left">54.76708</td>
+<td align="left">113.67753</td>
+</tr>
+<tr class="odd">
+<td>Med.Daily.PL</td>
+<td align="left">93.9995</td>
+<td align="left">51.0002</td>
+<td align="left">159.4997</td>
+</tr>
+<tr class="even">
+<td>Std.Dev.Daily.PL</td>
+<td align="left">262.9743</td>
+<td align="left">220.9642</td>
+<td align="left">343.6864</td>
+</tr>
+<tr class="odd">
+<td>Ann.Sharpe</td>
+<td align="left">4.517470</td>
+<td align="left">3.934576</td>
+<td align="left">5.250643</td>
+</tr>
+<tr class="even">
+<td>Max.Drawdown</td>
+<td align="left">-1711.999</td>
+<td align="left">-1213.002</td>
+<td align="left">-2274.998</td>
+</tr>
+<tr class="odd">
+<td>Profit.To.Max.Draw</td>
+<td align="left">3.191005</td>
+<td align="left">3.295953</td>
+<td align="left">3.098028</td>
+</tr>
+<tr class="even">
+<td>Avg.WinLoss.Ratio</td>
+<td align="left">1.124258</td>
+<td align="left">1.239369</td>
+<td align="left">1.129782</td>
+</tr>
+<tr class="odd">
+<td>Med.WinLoss.Ratio</td>
+<td align="left">1.209164</td>
+<td align="left">0.944803</td>
+<td align="left">1.692313</td>
+</tr>
+<tr class="even">
+<td>Max.Equity</td>
+<td align="left">5692.000</td>
+<td align="left">4224.997</td>
+<td align="left">7129.007</td>
+</tr>
+<tr class="odd">
+<td>Min.Equity</td>
+<td align="left">-59.0000</td>
+<td align="left">-113.9999</td>
+<td align="left">-984.9998</td>
+</tr>
+<tr class="even">
+<td>End.Equity</td>
+<td align="left">5463.000</td>
+<td align="left">3997.997</td>
+<td align="left">7048.007</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="cash-sharpe-ratio" class="section level2">
+<h2>Cash Sharpe Ratio</h2>
+<pre class="r"><code>portfolio.pnl &lt;- .blotter$portfolio.BollingerBands$summary$Net.Trading.PL
+SharpeRatio.annualized(R         = portfolio.pnl, 
+                       geometric = FALSE)</code></pre>
+<pre><code>##                                 Net.Trading.PL
+## Annualized Sharpe Ratio (Rf=0%)       0.820493</code></pre>
+<pre class="r"><code>instrument.returns &lt;- PortfReturns(portfolio.st)
+SharpeRatio.annualized(R         = instrument.returns, 
+                       geometric = FALSE)</code></pre>
+<pre><code>##                                 IWM.DailyEndEq QQQ.DailyEndEq
+## Annualized Sharpe Ratio (Rf=0%)      0.7257267      0.7438546
+##                                 SPY.DailyEndEq
+## Annualized Sharpe Ratio (Rf=0%)      0.7219646</code></pre>
+</div>
+<div id="performance-summary" class="section level2">
+<h2>Performance Summary</h2>
+<pre class="r"><code>returns &lt;- PortfReturns(Account = account.st)
+rownames(returns) &lt;- NULL
+charts.PerformanceSummary(returns, 
+                          colorset = bluefocus)</code></pre>
+<p><img src="bbands_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+</div>
+<div id="portfolio-summary" class="section level2">
+<h2>Portfolio Summary</h2>
+<pre class="r"><code>port &lt;- getPortfolio(portfolio.st)
+xyplot(x      =    port$summary, 
+       type   =    &quot;h&quot;, 
+       col    =    4)</code></pre>
+<p><img src="bbands_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+</div>
+<div id="account-summary" class="section level2">
+<h2>Account Summary</h2>
+<pre class="r"><code>a &lt;- getAccount(account.st)
+xyplot(a$summary, type = &quot;h&quot;, col = 4)</code></pre>
+<p><img src="bbands_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="equity-curve" class="section level2">
+<h2>Equity Curve</h2>
+<pre class="r"><code>plot(a$summary$End.Eq, main = &quot;Equity Curve&quot;)</code></pre>
+<p><img src="bbands_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session Info</h2>
+<p><strong>R version 3.3.2 (2016-10-31)</strong></p>
+<p>**<a href="Platform:**" class="uri">Platform:**</a> x86_64-pc-linux-gnu (64-bit)</p>
+<p><strong>locale:</strong> <em>LC_CTYPE=en_US.UTF-8</em>, <em>LC_NUMERIC=C</em>, <em>LC_TIME=en_US.UTF-8</em>, <em>LC_COLLATE=en_US.UTF-8</em>, <em>LC_MONETARY=en_US.UTF-8</em>, <em>LC_MESSAGES=en_US.UTF-8</em>, <em>LC_PAPER=en_US.UTF-8</em>, <em>LC_NAME=C</em>, <em>LC_ADDRESS=C</em>, <em>LC_TELEPHONE=C</em>, <em>LC_MEASUREMENT=en_US.UTF-8</em> and <em>LC_IDENTIFICATION=C</em></p>
+<p><strong>attached base packages:</strong></p>
+<ul>
+<li>stats</li>
+<li>graphics</li>
+<li>grDevices</li>
+<li>utils</li>
+<li>datasets</li>
+<li>methods</li>
+<li>base</li>
+</ul>
+<p><strong>other attached packages:</strong></p>
+<ul>
+<li>tidyquant(v.0.3.0)</li>
+<li>dplyr(v.0.5.0)</li>
+<li>readr(v.1.0.0)</li>
+<li>tidyr(v.0.6.1)</li>
+<li>tibble(v.1.2)</li>
+<li>ggplot2(v.2.2.1)</li>
+<li>tidyverse(v.1.1.1.9000)</li>
+<li>lubridate(v.1.6.0)</li>
+<li>pander(v.0.6.0)</li>
+<li>lattice(v.0.20-34)</li>
+<li>quantstrat(v.0.10.0)</li>
+<li>foreach(v.1.4.3)</li>
+<li>blotter(v.0.9.1741)</li>
+<li>PerformanceAnalytics(v.1.4.3541)</li>
+<li>FinancialInstrument(v.1.2.0)</li>
+<li>quantmod(v.0.4-7)</li>
+<li>TTR(v.0.23-1)</li>
+<li>xts(v.0.9-7)</li>
+<li>zoo(v.1.7-14)</li>
+<li>purrr(v.0.2.2)</li>
+<li>knitr(v.1.15.1)</li>
+</ul>
+<p><strong>loaded via a namespace (and not attached):</strong></p>
+<ul>
+<li>Rcpp(v.0.12.9)</li>
+<li>assertthat(v.0.1)</li>
+<li>rprojroot(v.1.2)</li>
+<li>digest(v.0.6.12)</li>
+<li>psych(v.1.6.9)</li>
+<li>R6(v.2.2.0)</li>
+<li>plyr(v.1.8.4)</li>
+<li>backports(v.1.0.5)</li>
+<li>acepack(v.1.4.1)</li>
+<li>evaluate(v.0.10)</li>
+<li>httr(v.1.2.1)</li>
+<li>highr(v.0.6)</li>
+<li>lazyeval(v.0.2.0)</li>
+<li>curl(v.2.3)</li>
+<li>readxl(v.0.1.1)</li>
+<li>data.table(v.1.10.4)</li>
+<li>rpart(v.4.1-10)</li>
+<li>Matrix(v.1.2-7.1)</li>
+<li>checkmate(v.1.8.2)</li>
+<li>rmarkdown(v.1.3)</li>
+<li>splines(v.3.3.2)</li>
+<li>servr(v.0.5)</li>
+<li>stringr(v.1.1.0)</li>
+<li>selectr(v.0.3-0)</li>
+<li>foreign(v.0.8-67)</li>
+<li>htmlwidgets(v.0.8)</li>
+<li>munsell(v.0.4.3)</li>
+<li>broom(v.0.4.1)</li>
+<li>httpuv(v.1.3.3)</li>
+<li>modelr(v.0.1.0)</li>
+<li>base64enc(v.0.1-3)</li>
+<li>mnormt(v.1.5-5)</li>
+<li>htmltools(v.0.3.5)</li>
+<li>nnet(v.7.3-12)</li>
+<li>htmlTable(v.1.9)</li>
+<li>gridExtra(v.2.2.1)</li>
+<li>Hmisc(v.4.0-2)</li>
+<li>codetools(v.0.2-15)</li>
+<li>XML(v.3.98-1.5)</li>
+<li>grid(v.3.3.2)</li>
+<li>nlme(v.3.1-129)</li>
+<li>jsonlite(v.1.2)</li>
+<li>gtable(v.0.2.0)</li>
+<li>DBI(v.0.5-1)</li>
+<li>magrittr(v.1.5)</li>
+<li>scales(v.0.4.1)</li>
+<li>BatchGetSymbols(v.1.1)</li>
+<li>stringi(v.1.1.2)</li>
+<li>reshape2(v.1.4.2)</li>
+<li>latticeExtra(v.0.6-28)</li>
+<li>xml2(v.1.1.1)</li>
+<li>Formula(v.1.2-1)</li>
+<li>RColorBrewer(v.1.1-2)</li>
+<li>iterators(v.1.0.8)</li>
+<li>tools(v.3.3.2)</li>
+<li>forcats(v.0.2.0)</li>
+<li>hms(v.0.3)</li>
+<li>parallel(v.3.3.2)</li>
+<li>survival(v.2.40-1)</li>
+<li>yaml(v.2.1.14)</li>
+<li>colorspace(v.1.3-0)</li>
+<li>cluster(v.2.0.5)</li>
+<li>rvest(v.0.3.2)</li>
+<li>haven(v.1.0.0)</li>
+</ul>
+</div>
+
+&copy; 2017 <a href="http://timtrice.net/" title="Tim Trice">Tim Trice</a>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

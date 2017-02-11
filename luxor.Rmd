@@ -1,0 +1,292 @@
+---
+title: Luxor
+subtitle: A demonstration of the Luxor strategy in R. 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r libraries}
+library(purrr)          # For plotting multiple charts at once
+library(quantmod)
+library(quantstrat)
+```
+
+```{r includes}
+source("./_R/functions.R")   # for checkBlotterUpdate()
+```
+
+  * If SMA(10) x> SMA(30)
+    + BTC short, BTO long
+  * If SMA(10) x< SMA(30)
+    + STC Long, STO short
+
+## Variables
+
+```{r}
+symbols            <-        c("SPY", "QQQ", "IWM")  #' As many as you want.
+nFast              <-        10                      #' SMA(10)
+nFast_col          <-        4                       #' Blue
+nSlow              <-        30                      #' SMA(30)
+nSlow_col          <-        2                       #' Red
+transaction_fees   <-        10                      #' Cost of trade, abs value
+source             <-        "yahoo"                 #' Yahoo, Google, FRED, etc.
+init_date          <-        "2007-12-31"            #' start_date - 1 day
+start_date         <-        "2008-01-01"            #' Begin trading
+end_date           <-        "2009-12-31"            #' End trading
+init_equity        <-        10000                   #' Initial equity
+portfolio.st       <-        "Luxor"                 #' Name of portfolio
+account.st         <-        "Luxor"                 #' Name of account
+strategy.st        <-        "Luxor"                 #' Name of strategy
+tz                 <-        "UTC"                   #' Time zone
+#' Currency abbr (ISO 4217); set for currency of symbols.
+curr               <-        "USD"
+```
+
+## Setup
+
+```{r}
+Sys.setenv(TZ = tz)
+```
+
+```{r}
+currency(curr)
+```
+
+```{r}
+getSymbols(Symbols           =         symbols, 
+           src               =         source, 
+           from              =         start_date, 
+           to                =         end_date, 
+           # Adjust OHLC values for Adjustment
+           adjust            =         TRUE)
+```
+
+```{r}
+stock(symbols, 
+      currency               =         curr)
+```
+
+```{r}
+# Remove existing objects to avoid invalid data
+rm.strat(portfolio.st)
+rm.strat(account.st)
+```
+
+```{r}
+# Initialize portfolio object
+initPortf(name               =         portfolio.st, 
+          symbols            =         symbols, 
+          initDate           =         init_date)
+```
+
+```{r}
+# Initialize account object
+initAcct(name                =         account.st, 
+         portfolios          =         portfolio.st, 
+         initDate            =         init_date, 
+         initEq              =         100000)
+```
+
+```{r}
+# Set up portfolio
+initOrders(portfolio         =         portfolio.st, 
+           symbols           =         symbols, 
+           initDate          =         init_date)
+```
+
+```{r}
+strategy(strategy.st, 
+         store               =         TRUE)
+```
+
+## Add Indicators
+
+```{r}
+# Add fast SMA `nFast`
+add.indicator(strategy       =         strategy.st,
+              # TTR:SMA()
+              name           =         "SMA",
+              # Parameters for TTR:SMA()
+              arguments      =         list(x         =    quote(Cl(mktdata)), 
+                                            n         =    nFast),
+              # Var name for indicator
+              label          =         "nFast")
+
+# Add slow SMA `nSlow`
+add.indicator(strategy       =         strategy.st, 
+              name           =         "SMA", 
+              arguments      =         list(x         =     quote(Cl(mktdata)), 
+                                            n         =     nSlow), 
+              label          =         "nSlow")
+```
+
+## Add Signals
+
+```{r}
+# Add new var `long` when `nFast` is gte `nSlow`
+add.signal(strategy        =           strategy.st,
+           # quantstrat:sigCrossover
+           name            =           "sigCrossover",
+           # Vars to compare for crossover
+           arguments       =           list(columns        = c("nFast", 
+                                                               "nSlow"),
+                                            relationship   = "gte"),
+           # Var to store crossover values.
+           label           =           "long")
+
+# Add new var `short` when `nFast` is lt `nSlow`
+add.signal(strategy        =           strategy.st,
+           name            =           "sigCrossover",
+           arguments       =           list(columns        = c("nFast", 
+                                                               "nSlow"), 
+                                            relationship   = "lt"),
+           label           =           "short")
+```
+
+## Add Rules
+
+```{r}
+# When `long` is TRUE, set SL order, BTO 100 shares on high of next bar. 
+add.rule(strategy       =    strategy.st,
+         name           =    "ruleSignal",
+         arguments      =    list(sigcol         =    "long",
+                                  sigval         =    TRUE,
+                                  orderqty       =    100,
+                                  ordertype      =    "stoplimit",
+                                  orderside      =    "long", 
+                                  threshold      =    0.0005,
+                                  prefer         =    "High", 
+                                  # Deduce transactions fees
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  # Do not replace any existing orders
+                                  replace        =    FALSE),
+         type           =    "enter",
+         # Var indicating order
+         label          =    "EnterLONG")
+
+# When `short` is TRUE, set SL order, STO 100 shares on low of next bar
+add.rule(strategy.st,
+         name           =    "ruleSignal",
+         arguments      =    list(sigcol         =    "short",
+                                  sigval         =    TRUE,
+                                  orderqty       =    -100,
+                                  ordertype      =    "stoplimit",
+                                  threshold      =    -0.005, 
+                                  orderside      =    "short", 
+                                  replace        =    FALSE, 
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  prefer         =    "Low"),
+         type           =    "enter",
+         label          =    "EnterSHORT")
+
+# When `short` is TRUE, liquidate all long positions at market price.
+add.rule(strategy.st, 
+         name           = "ruleSignal", 
+         arguments      = list(sigcol            =    "short", 
+                               sigval            =    TRUE, 
+                               orderside         =    "long", 
+                               ordertype         =    "market", 
+                               orderqty          =    "all", 
+                               TxnFees           =    abs(transaction_fees) * -1, 
+                               # Replace existing orders
+                               replace           =    TRUE), 
+         type           = "exit", 
+         label          = "Exit2SHORT")
+
+# When `long` is TRUE, liquidate all short positions at market price.
+add.rule(strategy.st, 
+         name           =    "ruleSignal", 
+         arguments      =    list(sigcol         =    "long", 
+                                  sigval         =    TRUE, 
+                                  orderside      =    "short", 
+                                  ordertype      =    "market", 
+                                  orderqty       =    "all", 
+                                  TxnFees        =    abs(transaction_fees) * -1, 
+                                  replace        =    TRUE), 
+         type           =    "exit", 
+         label          =    "Exit2LONG")
+```
+
+## Apply Strategy
+
+```{r}
+# Apply strategy
+applyStrategy(strategy.st, 
+              portfolios          =         portfolio.st)
+# Update portfolio and account objects.
+updatePortf(portfolio.st)
+updateAcct(account.st)
+updateEndEq(account.st)
+# Compare portfolio and accoutn objects for accuracy, validation.
+checkBlotterUpdate(portfolio.st, 
+                   account.st, 
+                   verbose        =         TRUE)
+```
+
+## Chart Positions
+
+```{r}
+# Print charts for each symbol showing transactions, PnL, Drawdown
+# Assign to x to suppress R output
+x <- map(symbols, 
+         chart.Posn, 
+         Portfolio      =    portfolio.st, 
+         TA             =    paste(sprintf("add_SMA(n = %d, col = %d)", 
+                                           nFast, 
+                                           nFast_col),
+                                   sprintf("add_SMA(n = %d, col = %d)", 
+                                           nSlow, 
+                                           nSlow_col), 
+                                   sep = ";"))
+```
+
+## Trade Analysis
+
+```{r tstats}
+tstats <- tradeStats(portfolio.st)
+kable(t(tstats))
+```
+
+## Cash Sharpe Ratio
+
+```{r portfolio.sharpe}
+portfolio.pnl <- .blotter$portfolio.Luxor$summary$Net.Trading.PL
+SharpeRatio.annualized(R         = portfolio.pnl, 
+                       geometric = FALSE)
+```
+
+```{r instrument.sharpe}
+instrument.returns <- PortfReturns(portfolio.st)
+SharpeRatio.annualized(R         = instrument.returns, 
+                       geometric = FALSE)
+```
+
+## Performance Summary
+
+```{r}
+returns <- PortfReturns(Account = account.st)
+rownames(returns) <- NULL
+charts.PerformanceSummary(returns, 
+                          colorset = bluefocus)
+```
+
+## Portfolio Summary
+
+```{r}
+port <- getPortfolio(portfolio.st)
+xyplot(x      =    port$summary, 
+       type   =    "h", 
+       col    =    4)
+```
+
+## Session Info
+
+```{r sessioninfo, echo = FALSE, child="_sessioninfo.Rmd"}
+```
