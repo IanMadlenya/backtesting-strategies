@@ -1,0 +1,10 @@
+name: "backtesting-strategies"
+navbar:
+  title: "Backtesting Strategies with R"
+  right:
+    - icon: fa-github text-muted
+      href: https://github.com/timtrice/backtesting-strategies
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate

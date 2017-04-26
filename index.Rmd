@@ -12,10 +12,9 @@ output:
         highlight: default
     bookdown::pdf_book:
         keep_tex: yes
-    bookdown::html_chapters:
-        css: toc.css
 documentclass: book
 description: "Backtesting strategies with R"
+site: bookdown::bookdown_site
 ---
 
 ```{r index-comments, eval = FALSE, echo = FALSE}
@@ -23,7 +22,7 @@ description: "Backtesting strategies with R"
 # Live serve:
 #       bookdown:::serve_book()
 # Produce gitbook output: 
-#       bookdown:;render_book("index.Rmd", "bookdown::gitbook")
+#       bookdown::render_book("index.Rmd", "bookdown::gitbook")
 # To produce PDF output: 
 #       bookdown::render_book("index.Rmd", "bookdown::pdf_book")
 # Preview a chapter:
@@ -72,7 +71,7 @@ This version of `quantstrat` includes the following packages, among others:
 
 With these libraries we will have all we need to fully-test strategies and measure performance. See 1.3 SessionInfo for more details.
 
-```{r index-mandatory-libraries}
+```{r index-mandatory-libraries, eval = FALSE}
 library(quantstrat)
 ```
 
@@ -84,7 +83,7 @@ Additional libraries we may use for analysis or book presentation:
 
 * tidyr 0.4.1
 
-```{r index-optional-libraries}
+```{r index-optional-libraries, eval = FALSE}
 library(data.table)
 library(dplyr)
 library(DT)
