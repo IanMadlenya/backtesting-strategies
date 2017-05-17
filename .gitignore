@@ -3,3 +3,5 @@
 .RData
 .my.conf.R
 /_data
+backtesting-strategies.Rproj
+packrat/lib*/
