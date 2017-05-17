@@ -14,12 +14,12 @@ Version: 0.5-1
 Package: DT
 Source: CRAN
 Version: 0.2
-Requires: htmltools, htmlwidgets, magrittr
+Requires: magrittr, htmltools, htmlwidgets
 
 Package: FinancialInstrument
 Source: CRAN
 Version: 1.2.0
-Requires: TTR, quantmod, xts, zoo
+Requires: zoo, xts, TTR, quantmod
 Hash: 6e31f43cc112ca90b0f31d51cad309ef
 
 Package: MASS
@@ -29,7 +29,7 @@ Version: 7.3-45
 Package: PerformanceAnalytics
 Source: CRAN
 Version: 1.4.3541
-Requires: xts, zoo
+Requires: zoo, xts
 Hash: b1d6f7850d31690ae31e8848dbce5a8b
 
 Package: R6
@@ -48,7 +48,7 @@ Version: 0.12.7
 Package: TTR
 Source: CRAN
 Version: 0.23-1
-Requires: xts, zoo
+Requires: zoo, xts
 Hash: 4d137b2fd11667a413d92e31f106e839
 
 Package: assertthat
@@ -66,7 +66,7 @@ Version: 1.0-6
 Package: blotter
 Source: github
 Version: 0.9.1644
-Requires: FinancialInstrument, PerformanceAnalytics, quantmod, xts, zoo
+Requires: zoo, xts, PerformanceAnalytics, quantmod, FinancialInstrument
 Hash: e7d9f4f4c4ff72606c975924db29d326
 GithubRepo: blotter
 GithubUsername: R-Finance
@@ -108,12 +108,12 @@ Hash: 87165608ca8aeb0958835c3c5b52b6b7
 Package: doMC
 Source: CRAN
 Version: 1.3.4
-Requires: foreach, iterators
+Requires: iterators, foreach
 
 Package: doParallel
 Source: CRAN
 Version: 1.0.10
-Requires: foreach, iterators
+Requires: iterators, foreach
 
 Package: dplyr
 Source: CRAN
@@ -140,7 +140,7 @@ Hash: b2a47a2b91737978cf50ba95825a9cd1
 Package: ggplot2
 Source: CRAN
 Version: 2.1.0
-Requires: MASS, digest, gtable, plyr, reshape2, scales
+Requires: MASS, digest, gtable, plyr, scales, reshape2
 
 Package: gtable
 Source: CRAN
@@ -159,7 +159,7 @@ Requires: Rcpp, digest
 Package: htmlwidgets
 Source: CRAN
 Version: 0.7
-Requires: htmltools, jsonlite, yaml
+Requires: jsonlite, yaml, htmltools
 
 Package: iterators
 Source: CRAN
@@ -174,7 +174,7 @@ Hash: 86d4b85b84421a4815f1bb4872e30ef4
 Package: knitr
 Source: CRAN
 Version: 1.14
-Requires: digest, evaluate, formatR, highr, markdown, stringr, yaml
+Requires: digest, formatR, highr, yaml, markdown, stringr, evaluate
 Hash: e7b411f5a5512295a260a45683fa0c4a
 
 Package: labeling
@@ -233,13 +233,13 @@ Requires: Rcpp
 Package: quantmod
 Source: CRAN
 Version: 0.4-7
-Requires: TTR, xts, zoo
+Requires: zoo, xts, TTR
 Hash: b9f7726c31bd7016c3680d8af960c81f
 
 Package: quantstrat
 Source: github
 Version: 0.8.2
-Requires: FinancialInstrument, TTR, blotter, foreach, xts
+Requires: foreach, xts, TTR, FinancialInstrument, blotter
 Hash: 760385592f308e8a9472b47b36b7ea74
 GithubRepo: quantstrat
 GithubUsername: R-Finance
@@ -254,13 +254,13 @@ Requires: Rcpp, plyr, stringr
 Package: rmarkdown
 Source: CRAN
 Version: 1.1
-Requires: base64enc, caTools, evaluate, htmltools, jsonlite, knitr,
-    tibble, yaml
+Requires: base64enc, jsonlite, yaml, caTools, htmltools, tibble,
+    evaluate, knitr
 
 Package: scales
 Source: CRAN
 Version: 0.4.0
-Requires: RColorBrewer, Rcpp, dichromat, labeling, munsell, plyr
+Requires: RColorBrewer, Rcpp, dichromat, labeling, plyr, munsell
 
 Package: stringi
 Source: CRAN
@@ -281,7 +281,7 @@ Requires: Rcpp, assertthat, lazyeval
 Package: tidyr
 Source: CRAN
 Version: 0.6.0
-Requires: Rcpp, dplyr, lazyeval, magrittr, stringi, tibble
+Requires: Rcpp, lazyeval, magrittr, stringi, tibble, dplyr
 
 Package: webshot
 Source: CRAN
